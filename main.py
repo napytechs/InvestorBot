@@ -1183,7 +1183,7 @@ def index():
     bot.set_webhook(config.WEBSITE_URI+"/"+config.TOKEN)
     return "!", 200
 
-@app.route('/' + config.TOKEN)
+@app.route('/' + config.TOKEN, methods=["POST"])
 def get_update():
     from flask import request
     json_string = request.get_data().decode("utf-8")
