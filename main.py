@@ -8,9 +8,12 @@ from telebot.custom_filters import ForwardFilter
 import sched
 import time
 import threading
+from flask import Flask
+
 
 apihelper.ENABLE_MIDDLEWARE = True
 bot = TeleBot(config.TOKEN, parse_mode="HTML")
+app = Flask(__name__)
 markups = {}
 event = sched.scheduler(time.time, time.sleep)
 
@@ -1173,5 +1176,23 @@ bot.add_custom_filter(ForwardFilter())
 event_sched = threading.Thread(target=forever)
 event_sched.start()
 
+
+@app.route('/')
+def index():
+    bot.delete_webhook()
+    bot.set_webhook(config.WEBSITE_URI+"/"+config.TOKEN)
+
+
+@app.route('/' + config.TOKEN)
+def get_update():
+    from flask import request
+    json_string = request.get_data().decode("utf-8")
+    update = types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+
+    return "OK", 200
+
+     
 if __name__ == '__main__':
-    bot.infinity_polling()
+    import os
+    app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5555)))
