@@ -1025,7 +1025,21 @@ def on_admin_permission(call: types.CallbackQuery):
         else:
             t, k = admin_text(call.message.chat.id)
             bot.edit_message_text(t, user_id, msg_id, reply_markup=k, parse_mode='html')
+    elif text == 'owner':
+        btn = types.InlineKeyboardMarkup([[InlineKeyboardButton("✅ Yes", callback_data="admin:yes:%d" % user.id), 
+                                          InlineKeyboardButton("❌ No", callback_data="admin:back:%d" % user.id)]])
+        bot.edit_message_text("⚠️ Are you sure to transfer ownership ?", user_id, msg_id, reply_markup=btn)
 
+    elif text == 'yes':
+        user.status = 'admin'
+        admin.status = 'user'
+        user.permission = Permission.ADMIN_PERMISSION
+        admin.permission = Permission.USER_PERMISSION
+        user.update(status=user.status, permission=user.permission)
+        admin.update(status=admin.status, permission=admin.permission)
+        bot.send_message(user_id, "Ownership transferred!")
+        bot.delete_message(user_id, msg_id)
+        start(message)
     else:
         try:
             if user.permission[text]:
