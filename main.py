@@ -1181,7 +1181,7 @@ event_sched.start()
 def index():
     bot.delete_webhook()
     bot.set_webhook(config.WEBSITE_URI+"/"+config.TOKEN)
-
+    return "!", 200
 
 @app.route('/' + config.TOKEN)
 def get_update():
