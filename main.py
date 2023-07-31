@@ -12,7 +12,7 @@ from flask import Flask
 
 
 apihelper.ENABLE_MIDDLEWARE = True
-bot = TeleBot(config.TOKEN, parse_mode="HTML", threaded=False)
+bot = TeleBot(config.TOKEN, parse_mode="HTML", num_threads=5)
 app = Flask(__name__)
 markups = {}
 event = sched.scheduler(time.time, time.sleep)
