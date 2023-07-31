@@ -3,10 +3,9 @@ from database import User, Permission
 from telebot import types
 
 
-main_keyboard_texts = ["💰 Invest", "💳 Withdraw", "📈 Stats", "👤 Account", "📋 Info", "🛠 Support"]
+main_keyboard_texts = ["💰 الاستثمار", "💳 سحب", "📈 احصائيات", "👤 الحساب", "📋 معلومات", "🛠 الدعم"]
 admin_keyboard_texts = []
-invest_keyboard_texts = ["💸 150%, ~ After 24 hours", "💸 200%, ~ After 3 days", "💸 300%, ~ After 7 days", "🔙  Back"]
-
+invest_keyboard_texts = ["💸 50٪ ، ~ بعد 24 ساعة", "💸 80٪ ، ~ بعد 3 أيام", "💸 100٪ ، ~ بعد 7 أيام", "🔙  Back"]
 
 def main_keyboard(user: User):
     kbd = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, row_width=2)

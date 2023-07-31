@@ -12,7 +12,7 @@ from flask import Flask
 
 
 apihelper.ENABLE_MIDDLEWARE = True
-bot = TeleBot(config.TOKEN, parse_mode="HTML")
+bot = TeleBot(config.TOKEN, parse_mode="HTML", threaded=False)
 app = Flask(__name__)
 markups = {}
 event = sched.scheduler(time.time, time.sleep)
@@ -83,9 +83,10 @@ def start(message: types.Message):
     
     if not db_user.exist():
         User.insert(user_id)
-    text = """Welcome 👋 Here you can start a new investment!
+    text = """مرحبًا بك 👋 هنا يمكنك بدء استثمار جديد!
 
-💵 We provide one investment plan, which is able to offer you the best profit!.
+💵 نقدم لك خطة استثمارية واحدة قادرة على أن تقدم لك أفضل ربح!.
+
 """
     bot.send_message(user_id, text, reply_markup=keyboards.main_keyboard(User(user_id)))
 
@@ -93,7 +94,7 @@ def start(message: types.Message):
 @bot.message_handler(content_types=['not_joined'])
 def not_joined(message: types.Message):
     usernames = "\n\n".join(get_not_joined(message.from_user.id))
-    bot.send_message(message.from_user.id, f"Dear user you need to join our channel(s) / group(s)\n{usernames}")
+    bot.send_message(message.from_user.id, f"عزيزي المستخدم ، تحتاج إلى الانضمام إلى القناة (القنوات) / المجموعة (المجموعات) الخاصة بنا\n{usernames}")
 
 
 @bot.message_handler(commands=['wallets'], chat_types=['private'], is_admin=True)
@@ -228,7 +229,7 @@ def on_cancel_state(message: types.Message):
     state = bot.get_state(user_id)
 
     if state in ['invest', 'screenshoot']:
-        message.text = "💰 Invest"
+        message.text = "💰 الاستثمار"
     else:
         return start(message)
     bot.delete_state(user_id)
@@ -243,63 +244,64 @@ def on_main_keyboards(message):
     text = message.text
     bot.delete_state(user_id)
 
-    if text == "💰 Invest":
-        btns = ["💸 150%, ~ After 24 hours", "💸 200%, ~ After 3 days", "💸 300%, ~ After 7 days", "🔙  Back"]
+    if text == "💰 الاستثمار":
+        btns = ["💸 50٪ ، ~ بعد 24 ساعة", "💸 80٪ ، ~ بعد 3 أيام", "💸 100٪ ، ~ بعد 7 أيام", "🔙  Back"]
         btn = types.ReplyKeyboardMarkup(row_width=1)
         btn.add(*[types.KeyboardButton(text) for text in btns])
-        bot.send_message(user_id, "<b>Chose one option:</b>", reply_markup=btn)
-    
-    elif text == "🤑 $20 Offer":
-        pass
+        bot.send_message(user_id, "<b>:اختر خيارًا واحدًا:</b>", reply_markup=btn)
 
-    elif text == "💳 Withdraw":
+    elif text == "💳 سحب":
         if user.balance > 0:
-            text = f"💵<b>Current balance</b>: <code>${user.balance}</code>\n\n❓<i>How much do you want to withdraw ?</i>"
+            text = f"💵 الرصيد الحالي : {user.balance}\n\n❓ما المبلغ الذي تريد سحبه؟"
             bot.send_message(user_id, text, reply_markup=keyboards.cancel())
             bot.set_state(user_id, "withdraw")
         else:
-            bot.send_message(user_id, "❌ You don't have enough funds, please charge your account first.")
+            bot.send_message(user_id, "❌ ليس لديك أموال كافية ، يرجى شحن حسابك أولاً.")
 
-    elif text == "📈 Stats":
+    elif text == "📈 احصائيات":
         users = len(User.find())
         invests = sum([user['invest'] for user in User.find()])
         withdraws = sum([user['withdraw'] for user in User.find()])
         msg = "👤 <b>Total users</b>: {0}\n\n💰 <b>Total Invest</b>: ${1}\n\n💳 <b>Total Withdraw</b>: ${2}".format(users, invests, withdraws)
         bot.send_message(user_id, msg)
 
-    elif text == "👤 Account":
-        msg = """<b>Your Account</b>
---------------------\n
-💵 <b>Current Balance</b>: ${0}
-💰 <b>Total Invests</b>: ${1}
-💳 <b>Total Withdraws</b>: ${2}\n
-📆 <i>Joined {3}</i>""".format(user.balance, user.invest, user.withdraw, user.date)
+    elif text == "👤 الحساب":
+        msg = """الحساب الخاص بك
+--------------------
+
+💵 الرصيد الحالي: {} دولار
+💰 إجمالي الاستثمارات: {} دولار
+💳 إجمالي عمليات السحب: {} دولار
+
+📆 انضم  {}""".format(user.balance, user.invest, user.withdraw, user.date)
         bot.send_message(user_id, msg, reply_markup=keyboards.profile_btn())
 
-    elif text == "📋 Info":
-        msg = """*📌 Condition: ✅ Payment
+    elif text == "📋 معلومات":
+        msg = """* الحالة: ✅ الدفع
 
-🔰 Double your balance is the simplest way to double your assets.
-After that, the investment plan will be completed automatically.
+🔰 مضاعفة رصيدك هي أبسط طريقة لمضاعفة أصولك.
+بعد ذلك ، سيتم الانتهاء من الخطة الاستثمارية تلقائيًا.
 
-📊 Our investment plan: + 200% + 400% + 1000%
+📊 خطتنا الاستثمارية: + 200٪ + 400٪ + 1000٪
 
-🟡 Minimum investment: $50
+🟡 الحد الأدنى للاستثمار: 50 دولارًا
 
-🟡 Minimum withdrawal: Withdrawal arrives when you withdraw your plan
+🟡 الحد الأدنى للسحب: يصل السحب عند سحب خطتك
 
-🟡 Maximum investment: $15,000
+🟡 الحد الأقصى للاستثمار: 15000 دولار
 
-🌟 Our payment system is instant and fully automatic
+🌟 نظام الدفع لدينا فوري وتلقائي بالكامل
 
-📌 After making a deposit, it will be automatically added to your account after a few minutes. """
+📌 بعد إجراء الإيداع ، ستتم إضافته تلقائيًا إلى حسابك بعد بضع دقائق.
+
+ """
         bot.send_message(user_id, msg)
 
     else:
-        msg = """<b>Hello 👋</b>
+        msg = """<b>مرحبا  👋 </b>
 
-<i>If you have a question or problem with the deposit or withdrawal system, you can contact the administrator</i>
-@alswerasy 
+<i>إذا كان لديك سؤال أو مشكلة في نظام الإيداع أو السحب ، يمكنك الاتصال بالمسؤول 
+</i>  @pioneers_of_investment
 """
         bot.send_message(user_id, msg)
 
@@ -309,27 +311,28 @@ def on_invest(message: types.Message):
     user_id = message.from_user.id
     text = message.text
     bot.delete_state(user_id)
-    msg = '''The minimum investment is ${} 💰
-The maximum investment is ${} 💰
+    msg = '''الحد الأدنى للاستثمار هو $ {} 💰
+الحد الأقصى للاستثمار هو $ {} 💰
 
-⏱ {}% profit will be deposited within {}⌛️
+⏱ {}٪ سيتم إيداع ربح داخل {} ⌛️
 
-The balance is added to the account after depositing
+يضاف الرصيد إلى الحساب بعد الإيداع
 
-⚠️ If you send less than {} USD, your deposit will be rejected!
+⚠️ إذا أرسلت أقل من {} دولار أمريكي ، فسيتم رفض إيداعك!
 
-✅ Send the amount you want to invest'''
-    if text == "💸 150%, ~ After 24 hours":
-        msg = msg.format(30, 2000, 150, "24 hours", 30)
-        _min, _max, req_hr, per = 30, 2000, 24, 150
+✅ أرسل المبلغ الذي تريد استثماره
+'''
+    if text == "💸 50٪ ، ~ بعد 24 ساعة":
+        msg = msg.format(30, 2000, 50, "24 hours", 30)
+        _min, _max, req_hr, per = 30, 2000, 24, 50
         bot.send_message(user_id, msg, reply_markup=keyboards.cancel())
-    elif text == "💸 200%, ~ After 3 days":
-        msg = msg.format(50, 4000, 200, "3 days", 50)
-        _min, _max, req_hr, per = 50, 4000, 24 * 3, 200
+    elif text == "💸 80٪ ، ~ بعد 3 أيام":
+        msg = msg.format(50, 4000, 80, "3 days", 50)
+        _min, _max, req_hr, per = 50, 4000, 24 * 3, 80
         bot.send_message(user_id, msg, reply_markup=keyboards.cancel())
-    elif text == "💸 300%, ~ After 7 days":
-        msg = msg.format(100, 10000, 300, "7 days", 100)
-        _min, _max, req_hr, per = 100, 10000, 24*7, 300
+    elif text == "💸 100٪ ، ~ بعد 7 أيام":
+        msg = msg.format(100, 10000, 100, "7 days", 100)
+        _min, _max, req_hr, per = 100, 10000, 24*7, 100
         bot.send_message(user_id, msg, reply_markup=keyboards.cancel())
     else:
         return start(message)
@@ -347,9 +350,11 @@ def on_invest(message: types.Message):
     user_id = message.from_user.id
     with bot.retrieve_data(user_id) as data:
         if not message.text.isdigit():
-            return bot.send_message(user_id, "Number required!")
+            bot.send_message(user_id, "Number required!")
+            return bot.set_state(user_id, 'invest')
         elif int(message.text) > data['maximum'] or int(message.text) < data['minimum']:
             bot.send_message(user_id, "Above or below the limit.")
+            return bot.set_state(user_id, 'invest')
         else:
             payeer = BotSetting().payeer
             usdt = BotSetting().usdt
@@ -359,7 +364,7 @@ def on_invest(message: types.Message):
             text += "\n\n✅ <b>USDT</b>:\n"
             for usd in usdt:
                 text += "  ◽ <code>%s</code>\n" % (usd)
-            text += '\n\nSend <b>𝗦𝗖𝗥𝗘𝗘𝗡𝗦𝗛𝗢𝗧📸</b> to confirm your deposit'
+            text += '\n\nأرسل 𝗦𝗖𝗥𝗘𝗘𝗡𝗦𝗛𝗢𝗧📸 لتأكيد إيداعك'
             bot.send_message(user_id, text, reply_markup=keyboards.cancel())
     
     bot.set_state(user_id, 'screenshoot')
@@ -374,7 +379,7 @@ def get_screenshoot(message: types.Message):
     user = User(user_id)
 
     if message.content_type != 'photo':
-        bot.send_message(user_id, "Only photo required!")
+        return bot.send_message(user_id, "Only photo required!")
 
     else:
         photo = message.photo[-1]
@@ -409,15 +414,16 @@ def on_withdraw(message):
 
     if not message.text.isdigit():
         bot.send_message(user_id, "Number required!")
+        return bot.set_state(user_id, 'withdraw')
     elif int(message.text) > user.balance or int(message.text) <= 0:
-        text = f"💵 <b>Current balance</b>: <code>{user.balance}</code>\n\n❓ <i>How much do you want to witdraw ?</i>"
+        text = f"💵 الرصيد الحالي : {user.balance}\n\n❓ ما المبلغ الذي تريد سحبه؟"
         bot.send_message(user_id, text, reply_markup=keyboards.cancel())
     else:
         kbd = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
         txt = ['PAYEER', "USDT", '❌ Cancel']
         kbd.add(*[types.KeyboardButton(t) for t in txt])
 
-        bot.send_message(user_id, "<b>Chose payment method</b>:", reply_markup=kbd)
+        bot.send_message(user_id, "ختر طريقة الدفع:", reply_markup=kbd)
         bot.set_state(user_id, 'payment_method')
 
         with bot.retrieve_data(user_id) as data:
@@ -429,15 +435,16 @@ def on_payment_method(message: types.Message):
     user_id = message.from_user.id
 
     if message.text == "PAYEER":
-        bot.send_message(user_id, "<b>Please send us your PAYEER wallet:</b>", reply_markup=keyboards.cancel())
+        bot.send_message(user_id, "من فضلك أرسل لنا محفظة PAYEER الخاصة بك:", reply_markup=keyboards.cancel())
         method = 'PAYEER'
 
     elif message.text == "USDT":
-        bot.send_message(user_id, "<b>Please send us your USDT wallet:</b>", reply_markup=keyboards.cancel())
+        bot.send_message(user_id, "من فضلك أرسل لنا محفظة USDT الخاصة بك:", reply_markup=keyboards.cancel())
         method = 'USDT'
 
     else:
-        return bot.send_message(user_id, "Only chose from below options!")
+        bot.send_message(user_id, "اختر فقط من الخيارات أدناه!")
+        return bot.set_state(user_id, 'payment_method')
 
     bot.set_state(user_id, 'get_payment_wallet')
     with bot.retrieve_data(user_id) as data:
@@ -450,8 +457,8 @@ def get_payment_wallet(message: types.Message):
 
     kbd = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kbd.add(types.KeyboardButton("✅ Confirm"), types.KeyboardButton("❌ Cancel"))
-    msg = "<b>Withdraw</b>\n\n💵 <b>Amount</b>: ${0}\n📱 <b>Payment Method</b>: {1}\n🧧 <b>Payment Wallet</b>: {2}" \
-          "\n\n✔ Confirm this withdraw"
+    msg = "سحب \n \n💵 المبلغ: $ {0} \n📱 طريقة الدفع: {1} \n🧧 محفظة الدفع: {2}" \
+          "\n \n✔️ أكد هذا السحب"
     with bot.retrieve_data(user_id) as data:
         data['wallet'] = message.text
         bot.send_message(user_id, msg.format(data['amount'], data['payment_method'], message.text), reply_markup=kbd)
@@ -474,8 +481,8 @@ def confirm_withdraw(message: types.Message):
         id = len(user.withdraw_history) - 1
         user.withdraw += int(data['amount'])
         user.update(balance=new_balance, withdraw=user.withdraw, withdraw_history=user.withdraw_history)
-        msg = bot.send_message(user_id, "👍 <b>Congratulation</b>\n\n✅ Your request is sent to the <b>bot admin</b>,"
-                                        " you will get your money in 24 hours.")
+        msg = bot.send_message(user_id, "👍 تهنئة \n \n✅ يتم إرسال طلبك إلى مسؤول الروبوت ،"
+                                        " سوف تحصل على أموالك في غضون 24 ساعة.")
         start(message)
         text = """◽ <b>Withdrawal Request</b>\n
 <b>Amount</b>: <code>${0}</code>
@@ -513,7 +520,7 @@ def on_history(callback: types.CallbackQuery):
     bot.answer_callback_query(callback.id)
     if data == "invest":
         if not user.invest_history:
-            text = "<b>Sorry</b>, you don't have any invest / deposit history yet."
+            text = "عذرًا ، ليس لديك أي سجل استثمار / إيداع حتى الآن."
         else:
             text = ""
             for invest in user.invest_history[:5]:
@@ -525,7 +532,7 @@ def on_history(callback: types.CallbackQuery):
                               reply_markup=keyboards.history_btn("invest", 1, len(user.invest_history)))
     elif data == "withdraw":
         if not user.withdraw_history:
-            text = "<b>Sorry</b>, you don't have any withdrawal history yet."
+            text = "عذرًا ، ليس لديك أي سجل سحب حتى الآن."
         else:
             text = ""
             for withdraw in user.withdraw_history[:5]:
@@ -535,12 +542,15 @@ def on_history(callback: types.CallbackQuery):
         bot.edit_message_text(text, user_id, callback.message.message_id,
                               reply_markup=keyboards.history_btn("withdraw", 1, len(user.withdraw_history)))
     else:
-        msg = """<b>Your Account</b>
---------------------\n
-💵 <b>Current Balance</b>: ${0}
-💰 <b>Total Invests</b>: ${1}
-💳 <b>Total Withdraws</b>: ${2}\n
-📆 <i>Joined {3}</i>""".format(user.balance, user.invest, user.withdraw, user.date)
+        msg = """الحساب الخاص بك
+--------------------
+
+💵 الرصيد الحالي: {} دولار
+💰 إجمالي الاستثمارات: {} دولار
+💳 إجمالي عمليات السحب: {} دولار
+
+📆 انضم  {}
+""".format(user.balance, user.invest, user.withdraw, user.date)
         bot.edit_message_text(msg, user_id, callback.message.message_id, reply_markup=keyboards.profile_btn())
 
 
@@ -554,7 +564,7 @@ def get_history(callback: types.CallbackQuery):
     bot.answer_callback_query(callback.id)
     if name == "invest":
         if not user.invest_history:
-            text = "<b>Sorry</b>, you don't have any invest / deposit history yet."
+            text = "عذرًا ، ليس لديك أي سجل استثمار / إيداع حتى الآن."
         else:
             text = ""
             for invest in user.invest_history[(row*5) - 5:row*5]:
@@ -567,7 +577,7 @@ def get_history(callback: types.CallbackQuery):
 
     else:
         if not user.withdraw_history:
-            text = "<b>Sorry</b>, you don't have any withdrawal history yet."
+            text = "عذرًا ، ليس لديك أي سجل سحب حتى الآن."
         else:
             text = ""
             for withdraw in user.withdraw_history[(row*5) - 5:row*5]:
@@ -599,11 +609,10 @@ def on_confirmation(callback: types.CallbackQuery):
     invest_history["Status"] = status
     user.invest_history[id] = invest_history
     user.invest += user.invest_history[id]['Amount']
-    print(user.invest_history)
     user.update(invest_history=user.invest_history, balance=user.balance, invest=user.invest)
     bot.edit_message_reply_markup(callback.from_user.id, callback.message.message_id)
-    # 3600 * user.invest_history[id]["Receive After"]
-    event.enter(10, 1, get_profit, argument=(user, msg_id, id))
+    event.enter(3600 * user.invest_history[id]["Receive After"], 1, 
+        get_profit, argument=(user, msg_id, id))
     bot.send_message(user_id, text, reply_to_message_id=msg_id)
 
 
@@ -913,6 +922,7 @@ def add_admin(msg: types.Message):
 
     except AssertionError as e:
         bot.send_message(user_id, e.args[0])
+        bot.set_state(user_id, State.admin)
     finally:
         bot.delete_state(user_id)
 
@@ -981,6 +991,7 @@ def add_channel(msg: types.Message):
     if not admin.can(Permission.MANAGE_BOT): return start(msg)
     try:
         assert channel.username is not None, "The channel must have a username!"
+
         channels = BotSetting().channels
         channels.append({"id": channel.id, 'send_message': False,  'force_join': False})
         BotSetting().update(channels=channels)
@@ -989,6 +1000,7 @@ def add_channel(msg: types.Message):
         bot.send_message(user_id, text, reply_markup=keyboard, parse_mode='html')
     except AssertionError as e:
         bot.send_message(user_id, e.args[0])
+        bot.set_state(user_id, State.channel)
     else:
         bot.delete_state(user_id)
 
@@ -1084,8 +1096,9 @@ def send_to_users(msg: types.Message):
     for ui in users:
         try:
             bot.copy_message(ui["id"], msg.chat.id, msg.message_id, reply_markup=util.quick_markup(markups))
+            time.sleep(0.1)
         except:
-            continue
+            time.sleep(1)
 
 
 def channel_text():
@@ -1174,16 +1187,16 @@ bot.add_custom_filter(StateFilter(bot))
 bot.add_custom_filter(ForwardFilter())
 
 event_sched = threading.Thread(target=forever)
-event_sched.start()
+
 
 
 @app.route('/')
 def index():
     bot.delete_webhook()
     bot.set_webhook(config.WEBSITE_URI+"/"+config.TOKEN)
-    return "!", 200
 
-@app.route('/' + config.TOKEN, methods=["POST"])
+
+@app.route('/' + config.TOKEN, methods=['POST'])
 def get_update():
     from flask import request
     json_string = request.get_data().decode("utf-8")
@@ -1196,3 +1209,6 @@ def get_update():
 if __name__ == '__main__':
     import os
     app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5555)))
+    event_sched.start()
+
+    
