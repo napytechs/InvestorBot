@@ -1194,7 +1194,8 @@ event_sched = threading.Thread(target=forever)
 def index():
     bot.delete_webhook()
     bot.set_webhook(config.WEBSITE_URI+"/"+config.TOKEN)
-
+    return "!", 200
+    
 
 @app.route('/' + config.TOKEN, methods=['POST'])
 def get_update():
