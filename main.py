@@ -334,15 +334,15 @@ def on_invest(message: types.Message):
 ✅ أرسل المبلغ الذي تريد استثماره
 '''
     if text == "💸 50٪ ، ~ بعد 24 ساعة":
-        msg = msg.format(30, 2000, 50, "24 hours", 30)
+        msg = msg.format(30, 2000, 50, "عد 24", 30)
         _min, _max, req_hr, per = 30, 2000, 24, 50
         bot.send_message(user_id, msg, reply_markup=keyboards.cancel())
     elif text == "💸 80٪ ، ~ بعد 3 أيام":
-        msg = msg.format(50, 4000, 80, "3 days", 50)
+        msg = msg.format(50, 4000, 80, "عد 3", 50)
         _min, _max, req_hr, per = 50, 4000, 24 * 3, 80
         bot.send_message(user_id, msg, reply_markup=keyboards.cancel())
     elif text == "💸 120٪ ، ~ بعد 7 أيام":
-        msg = msg.format(100, 10000, 120, "7 days", 100)
+        msg = msg.format(100, 10000, 120, "عد 7", 100)
         _min, _max, req_hr, per = 100, 10000, 24*7, 120
         bot.send_message(user_id, msg, reply_markup=keyboards.cancel())
     else:
@@ -1220,7 +1220,8 @@ def get_update():
      
 if __name__ == '__main__':
     import os
-    app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5555)))
     event_sched.start()
+    app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5555)))
+    
 
     
