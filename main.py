@@ -120,6 +120,8 @@ def add_payeer_wallet(message: types.Message):
     wallet = message.text.split()[1]
     payeer = BotSetting().payeer
     payeer.append(wallet)
+    wallet = wallet.replace("[", "")
+    wallet = wallet.replace("]", "")
     BotSetting().update(payeer=payeer)
     bot.send_message(message.from_user.id, "✅ <b>PAYEER</b> wallet successfully added!")
 
@@ -129,6 +131,9 @@ def add_usdt_wallet(message: types.Message):
     wallet = message.text.split()[1]
     usdt = BotSetting().usdt
     usdt.append(wallet)
+
+    wallet = wallet.replace("[", "")
+    wallet = wallet.replace("]", "")
     BotSetting().update(usdt=usdt)
     bot.send_message(message.from_user.id, "✅ <b>USDT</b> wallet successfully added!")
 
@@ -141,6 +146,9 @@ def remove_payeer_wallet(message: types.Message):
     
     payeer = BotSetting().payeer
     wallet = message.text.split()[1]
+
+    wallet = wallet.replace("[", "")
+    wallet = wallet.replace("]", "")
     if wallet in payeer:
         payeer.remove(wallet)
         BotSetting().update(payeer=payeer)
@@ -154,6 +162,9 @@ def remove_usdt_wallet(message: types.Message):
     if not user.can(Permission.MANAGE_BOT): return
     wallet = message.text.split()[1]
     usdt = BotSetting().usdt
+
+    wallet = wallet.replace("[", "")
+    wallet = wallet.replace("]", "")
     if wallet in usdt:
         usdt.remove(wallet)
         BotSetting().update(usdt=usdt)
@@ -245,7 +256,7 @@ def on_main_keyboards(message):
     bot.delete_state(user_id)
 
     if text == "💰 الاستثمار":
-        btns = ["💸 50٪ ، ~ بعد 24 ساعة", "💸 80٪ ، ~ بعد 3 أيام", "💸 100٪ ، ~ بعد 7 أيام", "🔙  Back"]
+        btns = ["💸 50٪ ، ~ بعد 24 ساعة", "💸 80٪ ، ~ بعد 3 أيام", "💸 120٪ ، ~ بعد 7 أيام", "🔙  Back"]
         btn = types.ReplyKeyboardMarkup(row_width=1)
         btn.add(*[types.KeyboardButton(text) for text in btns])
         bot.send_message(user_id, "<b>:اختر خيارًا واحدًا:</b>", reply_markup=btn)
@@ -330,9 +341,9 @@ def on_invest(message: types.Message):
         msg = msg.format(50, 4000, 80, "3 days", 50)
         _min, _max, req_hr, per = 50, 4000, 24 * 3, 80
         bot.send_message(user_id, msg, reply_markup=keyboards.cancel())
-    elif text == "💸 100٪ ، ~ بعد 7 أيام":
-        msg = msg.format(100, 10000, 100, "7 days", 100)
-        _min, _max, req_hr, per = 100, 10000, 24*7, 100
+    elif text == "💸 120٪ ، ~ بعد 7 أيام":
+        msg = msg.format(100, 10000, 120, "7 days", 100)
+        _min, _max, req_hr, per = 100, 10000, 24*7, 120
         bot.send_message(user_id, msg, reply_markup=keyboards.cancel())
     else:
         return start(message)

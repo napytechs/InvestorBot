@@ -5,7 +5,7 @@ from telebot import types
 
 main_keyboard_texts = ["💰 الاستثمار", "💳 سحب", "📈 احصائيات", "👤 الحساب", "📋 معلومات", "🛠 الدعم"]
 admin_keyboard_texts = []
-invest_keyboard_texts = ["💸 50٪ ، ~ بعد 24 ساعة", "💸 80٪ ، ~ بعد 3 أيام", "💸 100٪ ، ~ بعد 7 أيام", "🔙  Back"]
+invest_keyboard_texts = ["💸 50٪ ، ~ بعد 24 ساعة", "💸 80٪ ، ~ بعد 3 أيام", "💸 120٪ ، ~ بعد 7 أيام", "🔙  Back"]
 
 def main_keyboard(user: User):
     kbd = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, row_width=2)
